@@ -172,6 +172,8 @@ func parseToApplicationDTO(data []byte) (*model.ApplicationDTO, error) {
 		AuthFlowID:                appRequest.AuthFlowID,
 		RegistrationFlowID:        appRequest.RegistrationFlowID,
 		IsRegistrationFlowEnabled: appRequest.IsRegistrationFlowEnabled,
+		RecoveryFlowID:            appRequest.RecoveryFlowID,
+		IsRecoveryFlowEnabled:     appRequest.IsRecoveryFlowEnabled,
 		ThemeID:                   appRequest.ThemeID,
 		LayoutID:                  appRequest.LayoutID,
 		Template:                  appRequest.Template,

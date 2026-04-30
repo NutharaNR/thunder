@@ -408,7 +408,8 @@ func (suite *InboundClientStoreTestSuite) TestCreateProfile() {
 		suite.mockDBProvider.On("GetConfigDBClient").Return(suite.mockDBClient, nil).Once()
 		suite.mockDBClient.On("ExecuteContext", mock.Anything, queryCreateInboundClient,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).
 			Return(int64(1), nil).Once()
 
 		err := suite.store.CreateInboundClient(context.Background(), client)
@@ -442,7 +443,8 @@ func (suite *InboundClientStoreTestSuite) TestUpdateProfile() {
 		suite.mockDBProvider.On("GetConfigDBClient").Return(suite.mockDBClient, nil).Once()
 		suite.mockDBClient.On("ExecuteContext", mock.Anything, queryUpdateInboundClientByEntityID,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).
 			Return(int64(1), nil).Once()
 
 		err := suite.store.UpdateInboundClient(context.Background(), client)

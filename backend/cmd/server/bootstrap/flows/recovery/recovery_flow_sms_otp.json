@@ -1,0 +1,325 @@
+{
+    "name": "SMS OTP Password Recovery Flow",
+    "handle": "default-password-recovery-sms-otp",
+    "flowType": "RECOVERY",
+    "nodes": [
+        {
+            "id": "start",
+            "type": "START",
+            "onSuccess": "prompt_username",
+            "layout": {
+                "size": { "width": 101, "height": 34 },
+                "position": { "x": 0, "y": 400 }
+            }
+        },
+        {
+            "id": "prompt_username",
+            "type": "PROMPT",
+            "meta": {
+                "components": [
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "text_header_username",
+                        "label": "{{ t(recovery:forms.username.title) }}",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "type": "TEXT",
+                        "id": "text_subtitle_username",
+                        "label": "{{ t(recovery:forms.username.subtitle) }}",
+                        "variant": "HEADING_6"
+                    },
+                    {
+                        "type": "BLOCK",
+                        "id": "block_username",
+                        "components": [
+                            {
+                                "id": "input_username",
+                                "ref": "username",
+                                "type": "TEXT_INPUT",
+                                "label": "{{ t(recovery:forms.username.fields.username.label) }}",
+                                "required": true,
+                                "placeholder": "{{ t(recovery:forms.username.fields.username.placeholder) }}"
+                            },
+                            {
+                                "type": "ACTION",
+                                "id": "action_submit_username",
+                                "label": "{{ t(recovery:forms.username.actions.submit.label) }}",
+                                "variant": "PRIMARY",
+                                "eventType": "SUBMIT"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prompts": [
+                {
+                    "inputs": [
+                        {
+                            "ref": "input_username",
+                            "identifier": "username",
+                            "type": "TEXT_INPUT",
+                            "required": true
+                        }
+                    ],
+                    "action": {
+                        "ref": "action_submit_username",
+                        "nextNode": "identify_user"
+                    }
+                }
+            ],
+            "layout": {
+                "size": { "width": 350, "height": 431 },
+                "position": { "x": 200, "y": 250 }
+            }
+        },
+        {
+            "id": "identify_user",
+            "type": "TASK_EXECUTION",
+            "inputs": [
+                {
+                    "ref": "input_username",
+                    "identifier": "username",
+                    "type": "TEXT_INPUT",
+                    "required": true
+                }
+            ],
+            "executor": {
+                "name": "IdentifyingExecutor",
+                "mode": "identify"
+            },
+            "onSuccess": "send_otp",
+            "onFailure": "otp_sent_status",
+            "layout": {
+                "size": { "width": 206, "height": 113 },
+                "position": { "x": 650, "y": 340 }
+            }
+        },
+        {
+            "id": "send_otp",
+            "type": "TASK_EXECUTION",
+            "properties": {
+                "senderId": "<your-sender-id>"
+            },
+            "executor": {
+                "name": "SMSOTPAuthExecutor",
+                "mode": "send"
+            },
+            "onSuccess": "otp_sent_status",
+            "onFailure": "otp_sent_status",
+            "layout": {
+                "size": { "width": 206, "height": 113 },
+                "position": { "x": 960, "y": 340 }
+            }
+        },
+        {
+            "id": "otp_sent_status",
+            "type": "PROMPT",
+            "meta": {
+                "components": [
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "otp_sent_icon",
+                        "label": "📱",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "otp_sent_heading",
+                        "label": "{{ t(recovery:forms.otp_sent.title) }}",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "type": "TEXT",
+                        "id": "otp_sent_message",
+                        "label": "{{ t(recovery:forms.otp_sent.message) }}",
+                        "variant": "HEADING_6"
+                    },
+                    {
+                        "type": "BLOCK",
+                        "id": "block_otp",
+                        "components": [
+                            {
+                                "id": "input_otp",
+                                "ref": "otp",
+                                "type": "OTP_INPUT",
+                                "label": "{{ t(recovery:forms.otp_sent.fields.otp.label) }}",
+                                "required": true,
+                                "placeholder": "{{ t(recovery:forms.otp_sent.fields.otp.placeholder) }}"
+                            },
+                            {
+                                "type": "ACTION",
+                                "id": "action_submit_otp",
+                                "label": "{{ t(recovery:forms.otp_sent.actions.verify.label) }}",
+                                "variant": "PRIMARY",
+                                "eventType": "SUBMIT"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prompts": [
+                {
+                    "inputs": [
+                        {
+                            "ref": "input_otp",
+                            "identifier": "otp",
+                            "type": "OTP_INPUT",
+                            "required": true
+                        }
+                    ],
+                    "action": {
+                        "ref": "action_submit_otp",
+                        "nextNode": "verify_otp"
+                    }
+                }
+            ],
+            "layout": {
+                "size": { "width": 350, "height": 431 },
+                "position": { "x": 1270, "y": 250 }
+            }
+        },
+        {
+            "id": "verify_otp",
+            "type": "TASK_EXECUTION",
+            "inputs": [
+                {
+                    "ref": "input_otp",
+                    "identifier": "otp",
+                    "type": "OTP_INPUT",
+                    "required": true
+                }
+            ],
+            "executor": {
+                "name": "SMSOTPAuthExecutor",
+                "mode": "verify"
+            },
+            "onSuccess": "prompt_new_password",
+            "onFailure": "prompt_username",
+            "layout": {
+                "size": { "width": 206, "height": 113 },
+                "position": { "x": 1720, "y": 340 }
+            }
+        },
+        {
+            "id": "prompt_new_password",
+            "type": "PROMPT",
+            "meta": {
+                "components": [
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "text_header_password",
+                        "label": "{{ t(recovery:forms.new_password.title) }}",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "type": "TEXT",
+                        "id": "text_subtitle_password",
+                        "label": "{{ t(recovery:forms.new_password.subtitle) }}",
+                        "variant": "HEADING_6"
+                    },
+                    {
+                        "type": "BLOCK",
+                        "id": "block_password",
+                        "components": [
+                            {
+                                "id": "input_new_password",
+                                "ref": "password",
+                                "type": "PASSWORD_INPUT",
+                                "label": "{{ t(recovery:forms.new_password.fields.password.label) }}",
+                                "required": true,
+                                "placeholder": "{{ t(recovery:forms.new_password.fields.password.placeholder) }}"
+                            },
+                            {
+                                "type": "ACTION",
+                                "id": "action_submit_password",
+                                "label": "{{ t(recovery:forms.new_password.actions.submit.label) }}",
+                                "variant": "PRIMARY",
+                                "eventType": "SUBMIT"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "prompts": [
+                {
+                    "inputs": [
+                        {
+                            "ref": "input_new_password",
+                            "identifier": "password",
+                            "type": "PASSWORD_INPUT",
+                            "required": true
+                        }
+                    ],
+                    "action": {
+                        "ref": "action_submit_password",
+                        "nextNode": "set_credential"
+                    }
+                }
+            ],
+            "layout": {
+                "size": { "width": 350, "height": 431 },
+                "position": { "x": 2040, "y": 250 }
+            }
+        },
+        {
+            "id": "set_credential",
+            "type": "TASK_EXECUTION",
+            "executor": {
+                "name": "CredentialSetter"
+            },
+            "onSuccess": "recovery_complete",
+            "layout": {
+                "size": { "width": 206, "height": 113 },
+                "position": { "x": 2500, "y": 340 }
+            }
+        },
+        {
+            "id": "recovery_complete",
+            "type": "PROMPT",
+            "meta": {
+                "components": [
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "recovery_complete_icon",
+                        "label": "✅",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "recovery_complete_heading",
+                        "label": "{{ t(recovery:forms.complete.title) }}",
+                        "variant": "HEADING_1"
+                    },
+                    {
+                        "align": "center",
+                        "type": "TEXT",
+                        "id": "recovery_complete_message",
+                        "label": "{{ t(recovery:forms.complete.message) }}",
+                        "variant": "HEADING_6"
+                    }
+                ]
+            },
+            "message": "{{ t(recovery:forms.complete.title) }}",
+            "next": "end",
+            "layout": {
+                "size": { "width": 350, "height": 340 },
+                "position": { "x": 2820, "y": 250 }
+            }
+        },
+        {
+            "id": "end",
+            "type": "END",
+            "layout": {
+                "size": { "width": 85, "height": 34 },
+                "position": { "x": 3280, "y": 375 }
+            }
+        }
+    ]
+}

@@ -800,9 +800,10 @@ log_info "Creating default flows..."
 AUTH_FLOWS_DIR="${SCRIPT_DIR}/flows/authentication"
 REG_FLOWS_DIR="${SCRIPT_DIR}/flows/registration"
 USER_ONBOARDING_FLOWS_DIR="${SCRIPT_DIR}/flows/user_onboarding"
+RECOVERY_FLOWS_DIR="${SCRIPT_DIR}/flows/recovery"
 
 # Check if flows directory exists
-if [[ ! -d "$AUTH_FLOWS_DIR" ]] && [[ ! -d "$REG_FLOWS_DIR" ]] && [[ ! -d "$USER_ONBOARDING_FLOWS_DIR" ]]; then
+if [[ ! -d "$AUTH_FLOWS_DIR" ]] && [[ ! -d "$REG_FLOWS_DIR" ]] && [[ ! -d "$USER_ONBOARDING_FLOWS_DIR" ]] && [[ ! -d "$RECOVERY_FLOWS_DIR" ]]; then
     log_warning "Flow definition directories not found, skipping flow creation"
 else
     FLOW_COUNT=0
@@ -1000,6 +1001,65 @@ else
         fi
     fi
 
+    # Process recovery flows
+    if [[ -d "$RECOVERY_FLOWS_DIR" ]]; then
+        shopt -s nullglob
+        RECOVERY_FILES=("$RECOVERY_FLOWS_DIR"/*.json)
+        shopt -u nullglob
+
+        if [[ ${#RECOVERY_FILES[@]} -gt 0 ]]; then
+            log_info "Processing recovery flows..."
+
+            # Fetch existing recovery flows
+            RESPONSE=$(api_call GET "/flows?flowType=RECOVERY&limit=200")
+            HTTP_CODE="${RESPONSE: -3}"
+            BODY="${RESPONSE%???}"
+
+            # Store existing recovery flows as "handle|id" pairs
+            EXISTING_RECOVERY_FLOWS=""
+            if [[ "$HTTP_CODE" == "200" ]]; then
+                while IFS= read -r line; do
+                    FLOW_ID=$(echo "$line" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+                    FLOW_HANDLE=$(echo "$line" | grep -o '"handle":"[^"]*"' | cut -d'"' -f4)
+                    if [[ -n "$FLOW_ID" ]] && [[ -n "$FLOW_HANDLE" ]]; then
+                        EXISTING_RECOVERY_FLOWS="${EXISTING_RECOVERY_FLOWS}${FLOW_HANDLE}|${FLOW_ID}"$'\n'
+                    fi
+                done < <(echo "$BODY" | grep -o '{[^}]*"id":"[^"]*"[^}]*"handle":"[^"]*"[^}]*}')
+            fi
+
+            for FLOW_FILE in "$RECOVERY_FLOWS_DIR"/*.json; do
+                [[ ! -f "$FLOW_FILE" ]] && continue
+
+                FLOW_COUNT=$((FLOW_COUNT + 1))
+                FLOW_HANDLE=$(grep -o '"handle"[[:space:]]*:[[:space:]]*"[^"]*"' "$FLOW_FILE" | head -1 | sed 's/"handle"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
+                FLOW_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$FLOW_FILE" | head -1 | sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
+
+                # Check if flow exists by handle
+                if echo "$EXISTING_RECOVERY_FLOWS" | grep -q "^${FLOW_HANDLE}|"; then
+                    # Update existing flow
+                    FLOW_ID=$(echo "$EXISTING_RECOVERY_FLOWS" | grep "^${FLOW_HANDLE}|" | cut -d'|' -f2)
+                    log_info "Updating existing recovery flow: $FLOW_NAME (handle: $FLOW_HANDLE)"
+                    update_flow "$FLOW_ID" "$FLOW_FILE"
+                    RESULT=$?
+                    if [[ $RESULT -eq 0 ]]; then
+                        FLOW_SUCCESS=$((FLOW_SUCCESS + 1))
+                    fi
+                else
+                    # Create new flow
+                    create_flow "$FLOW_FILE"
+                    RESULT=$?
+                    if [[ $RESULT -eq 0 ]]; then
+                        FLOW_SUCCESS=$((FLOW_SUCCESS + 1))
+                    elif [[ $RESULT -eq 2 ]]; then
+                        FLOW_SKIPPED=$((FLOW_SKIPPED + 1))
+                    fi
+                fi
+            done
+        else
+            log_debug "No recovery flow files found"
+        fi
+    fi
+
     if [[ $FLOW_COUNT -gt 0 ]]; then
         log_info "Flow creation summary: $FLOW_SUCCESS created/updated, $FLOW_SKIPPED skipped, $((FLOW_COUNT - FLOW_SUCCESS - FLOW_SKIPPED)) failed"
     fi
@@ -1015,7 +1075,7 @@ log_info "Creating application-specific flows..."
 
 APPS_FLOWS_DIR="${SCRIPT_DIR}/flows/apps"
 
-# Store application flow IDs as "app_name|auth_flow_id|reg_flow_id" pairs
+# Store application flow IDs as "app_name|auth_flow_id|reg_flow_id|recovery_flow_id" pairs
 APP_FLOW_IDS=""
 
 if [[ -d "$APPS_FLOWS_DIR" ]]; then
@@ -1052,26 +1112,42 @@ if [[ -d "$APPS_FLOWS_DIR" ]]; then
         done < <(echo "$BODY" | grep -o '{[^}]*"id":"[^"]*"[^}]*"handle":"[^"]*"[^}]*}')
     fi
 
+    # Get recovery flows
+    RESPONSE=$(api_call GET "/flows?flowType=RECOVERY&limit=200")
+    HTTP_CODE="${RESPONSE: -3}"
+    BODY="${RESPONSE%???}"
+    EXISTING_APP_RECOVERY_FLOWS=""
+    if [[ "$HTTP_CODE" == "200" ]]; then
+        while IFS= read -r line; do
+            FLOW_ID=$(echo "$line" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+            FLOW_HANDLE=$(echo "$line" | grep -o '"handle":"[^"]*"' | cut -d'"' -f4)
+            if [[ -n "$FLOW_ID" ]] && [[ -n "$FLOW_HANDLE" ]]; then
+                EXISTING_APP_RECOVERY_FLOWS="${EXISTING_APP_RECOVERY_FLOWS}${FLOW_HANDLE}|${FLOW_ID}"$'\n'
+            fi
+        done < <(echo "$BODY" | grep -o '{[^}]*"id":"[^"]*"[^}]*"handle":"[^"]*"[^}]*}')
+    fi
+
     # Process each application directory
     for APP_DIR in "$APPS_FLOWS_DIR"/*; do
         [[ ! -d "$APP_DIR" ]] && continue
-        
+
         APP_NAME=$(basename "$APP_DIR")
         APP_AUTH_FLOW_ID=""
         APP_REG_FLOW_ID=""
-        
+        APP_RECOVERY_FLOW_ID=""
+
         log_info "Processing flows for application: $APP_NAME"
-        
+
         # Process authentication flow for app
         shopt -s nullglob
         AUTH_FLOW_FILES=("$APP_DIR"/auth_*.json)
         shopt -u nullglob
-        
+
         if [[ ${#AUTH_FLOW_FILES[@]} -gt 0 ]]; then
             AUTH_FLOW_FILE="${AUTH_FLOW_FILES[0]}"
             FLOW_HANDLE=$(grep -o '"handle"[[:space:]]*:[[:space:]]*"[^"]*"' "$AUTH_FLOW_FILE" | head -1 | sed 's/"handle"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
             FLOW_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$AUTH_FLOW_FILE" | head -1 | sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
-            
+
             # Check if auth flow exists by handle
             if echo "$EXISTING_APP_AUTH_FLOWS" | grep -q "^${FLOW_HANDLE}|"; then
                 # Update existing flow
@@ -1082,7 +1158,7 @@ if [[ -d "$APPS_FLOWS_DIR" ]]; then
                 # Create new flow
                 APP_AUTH_FLOW_ID=$(create_flow "$AUTH_FLOW_FILE")
             fi
-            
+
             # Re-fetch registration flows after creating auth flow
             if [[ -n "$APP_AUTH_FLOW_ID" ]]; then
                 RESPONSE=$(api_call GET "/flows?flowType=REGISTRATION&limit=200")
@@ -1107,12 +1183,12 @@ if [[ -d "$APPS_FLOWS_DIR" ]]; then
         shopt -s nullglob
         REG_FLOW_FILES=("$APP_DIR"/registration_*.json)
         shopt -u nullglob
-        
+
         if [[ ${#REG_FLOW_FILES[@]} -gt 0 ]]; then
             REG_FLOW_FILE="${REG_FLOW_FILES[0]}"
             FLOW_HANDLE=$(grep -o '"handle"[[:space:]]*:[[:space:]]*"[^"]*"' "$REG_FLOW_FILE" | head -1 | sed 's/"handle"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
             FLOW_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$REG_FLOW_FILE" | head -1 | sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
-            
+
             # Check if registration flow exists by handle
             if echo "$EXISTING_APP_REG_FLOWS" | grep -q "^${FLOW_HANDLE}|"; then
                 # Update existing flow
@@ -1126,10 +1202,34 @@ if [[ -d "$APPS_FLOWS_DIR" ]]; then
         else
             log_warning "No registration flow file found for app: $APP_NAME"
         fi
-        
+
+        # Process recovery flow for app
+        shopt -s nullglob
+        RECOVERY_FLOW_FILES=("$APP_DIR"/recovery_*.json)
+        shopt -u nullglob
+
+        if [[ ${#RECOVERY_FLOW_FILES[@]} -gt 0 ]]; then
+            RECOVERY_FLOW_FILE="${RECOVERY_FLOW_FILES[0]}"
+            FLOW_HANDLE=$(grep -o '"handle"[[:space:]]*:[[:space:]]*"[^"]*"' "$RECOVERY_FLOW_FILE" | head -1 | sed 's/"handle"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
+            FLOW_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$RECOVERY_FLOW_FILE" | head -1 | sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
+
+            # Check if recovery flow exists by handle
+            if echo "$EXISTING_APP_RECOVERY_FLOWS" | grep -q "^${FLOW_HANDLE}|"; then
+                # Update existing flow
+                APP_RECOVERY_FLOW_ID=$(echo "$EXISTING_APP_RECOVERY_FLOWS" | grep "^${FLOW_HANDLE}|" | cut -d'|' -f2)
+                log_info "Updating existing recovery flow: $FLOW_NAME (handle: $FLOW_HANDLE)"
+                update_flow "$APP_RECOVERY_FLOW_ID" "$RECOVERY_FLOW_FILE"
+            else
+                # Create new flow
+                APP_RECOVERY_FLOW_ID=$(create_flow "$RECOVERY_FLOW_FILE")
+            fi
+        else
+            log_debug "No recovery flow file found for app: $APP_NAME"
+        fi
+
         # Store the flow IDs for this app
-        log_debug "Storing flow IDs for $APP_NAME: auth=$APP_AUTH_FLOW_ID, reg=$APP_REG_FLOW_ID"
-        APP_FLOW_IDS="${APP_FLOW_IDS}${APP_NAME}|${APP_AUTH_FLOW_ID}|${APP_REG_FLOW_ID}"$'\n'
+        log_debug "Storing flow IDs for $APP_NAME: auth=$APP_AUTH_FLOW_ID, reg=$APP_REG_FLOW_ID, recovery=$APP_RECOVERY_FLOW_ID"
+        APP_FLOW_IDS="${APP_FLOW_IDS}${APP_NAME}|${APP_AUTH_FLOW_ID}|${APP_REG_FLOW_ID}|${APP_RECOVERY_FLOW_ID}"$'\n'
     done
 else
     log_warning "Application flows directory not found at $APPS_FLOWS_DIR"
@@ -1146,7 +1246,8 @@ log_info "Creating CONSOLE application..."
 # Get flow IDs for console app from the APP_FLOW_IDS created/found during flow processing
 CONSOLE_AUTH_FLOW_ID=$(echo "$APP_FLOW_IDS" | grep "^console|" | cut -d'|' -f2)
 CONSOLE_REG_FLOW_ID=$(echo "$APP_FLOW_IDS" | grep "^console|" | cut -d'|' -f3)
-log_debug "Extracted flow IDs: auth=$CONSOLE_AUTH_FLOW_ID, reg=$CONSOLE_REG_FLOW_ID"
+CONSOLE_RECOVERY_FLOW_ID=$(echo "$APP_FLOW_IDS" | grep "^console|" | cut -d'|' -f4)
+log_debug "Extracted flow IDs: auth=$CONSOLE_AUTH_FLOW_ID, reg=$CONSOLE_REG_FLOW_ID, recovery=$CONSOLE_RECOVERY_FLOW_ID"
 
 # Validate that flow IDs are available
 if [[ -z "$CONSOLE_AUTH_FLOW_ID" ]]; then
@@ -1155,6 +1256,10 @@ if [[ -z "$CONSOLE_AUTH_FLOW_ID" ]]; then
 fi
 if [[ -z "$CONSOLE_REG_FLOW_ID" ]]; then
     log_error "Console registration flow ID not found, cannot create CONSOLE application"
+    exit 1
+fi
+if [[ -z "$CONSOLE_RECOVERY_FLOW_ID" ]]; then
+    log_error "Console recovery flow ID not found, cannot create CONSOLE application"
     exit 1
 fi
 
@@ -1183,6 +1288,8 @@ RESPONSE=$(api_call POST "/applications" "{
     \"authFlowId\": \"${CONSOLE_AUTH_FLOW_ID}\",
     \"registrationFlowId\": \"${CONSOLE_REG_FLOW_ID}\",
     \"isRegistrationFlowEnabled\": false,
+    \"recoveryFlowId\": \"${CONSOLE_RECOVERY_FLOW_ID}\",
+    \"isRecoveryFlowEnabled\": false,
     \"allowedUserTypes\": [\"Person\"],
   \"user_attributes\": [\"given_name\",\"family_name\",\"email\",\"groups\", \"name\", \"ouId\"],
     \"inboundAuthConfig\": [{

@@ -430,7 +430,8 @@ func BuildOAuthClient(entityID, clientID, ouID string, oauthDAO *inboundmodel.OA
 	return client
 }
 
-// resolveFlowDefaults fills AuthFlowID and RegistrationFlowID with system defaults when empty.
+// resolveFlowDefaults fills AuthFlowID, RegistrationFlowID, and RecoveryFlowID with system
+// defaults when empty, using the auth flow's handle to locate matching flows of each type.
 func (s *inboundClientService) resolveFlowDefaults(ctx context.Context, c *inboundmodel.InboundClient) error {
 	if s.flowMgt == nil || c == nil {
 		return nil
@@ -446,7 +447,7 @@ func (s *inboundClientService) resolveFlowDefaults(ctx context.Context, c *inbou
 		}
 		c.AuthFlowID = flow.ID
 	}
-	if c.RegistrationFlowID == "" && c.AuthFlowID != "" && config.GetServerRuntime().Config.Flow.AutoInferRegistration {
+	if c.AuthFlowID != "" {
 		authFlow, svcErr := s.flowMgt.GetFlow(ctx, c.AuthFlowID)
 		if svcErr != nil {
 			if svcErr.Type == serviceerror.ServerErrorType {
@@ -454,14 +455,34 @@ func (s *inboundClientService) resolveFlowDefaults(ctx context.Context, c *inbou
 			}
 			return ErrFKFlowDefinitionRetrievalFailed
 		}
-		regFlow, svcErr := s.flowMgt.GetFlowByHandle(ctx, authFlow.Handle, flowcommon.FlowTypeRegistration)
-		if svcErr != nil {
-			if svcErr.Type == serviceerror.ServerErrorType {
-				return ErrFKFlowServerError
+		if c.RegistrationFlowID == "" && config.GetServerRuntime().Config.Flow.AutoInferRegistration {
+			regFlow, svcErr := s.flowMgt.GetFlowByHandle(ctx, authFlow.Handle, flowcommon.FlowTypeRegistration)
+			if svcErr != nil {
+				if svcErr.Type == serviceerror.ServerErrorType {
+					return ErrFKFlowServerError
+				}
+				return ErrFKFlowDefinitionRetrievalFailed
 			}
-			return ErrFKFlowDefinitionRetrievalFailed
+			c.RegistrationFlowID = regFlow.ID
 		}
-		c.RegistrationFlowID = regFlow.ID
+		if c.RecoveryFlowID == "" {
+			recoveryFlow, svcErr := s.flowMgt.GetFlowByHandle(ctx, authFlow.Handle, flowcommon.FlowTypeRecovery)
+			if svcErr != nil {
+				if svcErr.Type == serviceerror.ServerErrorType {
+					return ErrFKFlowServerError
+				}
+				// No recovery flow matching the auth flow's handle; fall back to the default.
+				defaultHandle := config.GetServerRuntime().Config.Flow.DefaultAuthFlowHandle
+				recoveryFlow, svcErr = s.flowMgt.GetFlowByHandle(ctx, defaultHandle, flowcommon.FlowTypeRecovery)
+				if svcErr != nil {
+					if svcErr.Type == serviceerror.ServerErrorType {
+						return ErrFKFlowServerError
+					}
+					return ErrFKFlowDefinitionRetrievalFailed
+				}
+			}
+			c.RecoveryFlowID = recoveryFlow.ID
+		}
 	}
 	return nil
 }
@@ -824,6 +845,9 @@ func (s *inboundClientService) validateFKs(ctx context.Context, c *inboundmodel.
 	if err := s.validateRegistrationFlowID(ctx, c.RegistrationFlowID); err != nil {
 		return err
 	}
+	if err := s.validateRecoveryFlowID(ctx, c.RecoveryFlowID); err != nil {
+		return err
+	}
 	if err := s.validateThemeID(c.ThemeID); err != nil {
 		return err
 	}
@@ -862,6 +886,21 @@ func (s *inboundClientService) validateRegistrationFlowID(ctx context.Context, f
 	}
 	if !valid {
 		return ErrFKInvalidRegistrationFlow
+	}
+	return nil
+}
+
+// validateRecoveryFlowID validates that the recovery flow ID exists and is of the correct type.
+func (s *inboundClientService) validateRecoveryFlowID(ctx context.Context, flowID string) error {
+	if flowID == "" || s.flowMgt == nil {
+		return nil
+	}
+	valid, svcErr := s.flowMgt.IsValidFlow(ctx, flowID, flowcommon.FlowTypeRecovery)
+	if svcErr != nil {
+		return ErrFKFlowServerError
+	}
+	if !valid {
+		return ErrFKInvalidRecoveryFlow
 	}
 	return nil
 }

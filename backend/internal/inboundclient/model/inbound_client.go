@@ -35,6 +35,8 @@ type InboundClient struct {
 	AuthFlowID                string
 	RegistrationFlowID        string
 	IsRegistrationFlowEnabled bool
+	RecoveryFlowID            string
+	IsRecoveryFlowEnabled     bool
 	ThemeID                   string
 	LayoutID                  string
 	Assertion                 *AssertionConfig

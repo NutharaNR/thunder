@@ -34,6 +34,8 @@ type ApplicationDTO struct {
 	AuthFlowID                string `json:"authFlowId,omitempty" jsonschema:"Authentication flow ID. Optional. Specifies which login flow to use (e.g., MFA, passwordless). Use list_flows to find available flows. If omitted, the default authentication flow is used."`
 	RegistrationFlowID        string `json:"registrationFlowId,omitempty" jsonschema:"Registration flow ID. Optional. Specifies the user registration/signup flow. Use list_flows to find available flows."`
 	IsRegistrationFlowEnabled bool   `json:"isRegistrationFlowEnabled,omitempty" jsonschema:"Enable self-service registration. Set to true to allow users to sign up themselves. Requires registration_flow_id to be set."`
+	RecoveryFlowID            string `json:"recoveryFlowId,omitempty" jsonschema:"Recovery flow ID. Optional. Specifies the account recovery flow (e.g., password reset via email link). Use list_flows to find available flows."`
+	IsRecoveryFlowEnabled     bool   `json:"isRecoveryFlowEnabled,omitempty" jsonschema:"Enable self-service recovery. Set to true to allow users to recover their account. Requires recovery_flow_id to be set."`
 	ThemeID                   string `json:"themeId,omitempty" jsonschema:"Theme configuration ID. Optional. Customizes the visual styling (colors, typography) of login pages."`
 	LayoutID                  string `json:"layoutId,omitempty" jsonschema:"Layout configuration ID. Optional. Customizes the screen structure and component positioning of login pages."`
 	Template                  string `json:"template,omitempty" jsonschema:"Application template. Optional. Pre-configured application type template."`
@@ -60,6 +62,8 @@ type BasicApplicationDTO struct {
 	AuthFlowID                string
 	RegistrationFlowID        string
 	IsRegistrationFlowEnabled bool
+	RecoveryFlowID            string
+	IsRecoveryFlowEnabled     bool
 	ThemeID                   string
 	LayoutID                  string
 	Template                  string
@@ -77,6 +81,8 @@ type Application struct {
 	AuthFlowID                string `yaml:"auth_flow_id,omitempty" json:"authFlowId,omitempty" jsonschema:"Associated authentication flow ID."`
 	RegistrationFlowID        string `yaml:"registration_flow_id,omitempty" json:"registrationFlowId,omitempty" jsonschema:"Associated registration flow ID."`
 	IsRegistrationFlowEnabled bool   `yaml:"is_registration_flow_enabled,omitempty" json:"isRegistrationFlowEnabled,omitempty" jsonschema:"Indicates if self-service registration is enabled."`
+	RecoveryFlowID            string `yaml:"recovery_flow_id,omitempty" json:"recoveryFlowId,omitempty" jsonschema:"Associated recovery flow ID."`
+	IsRecoveryFlowEnabled     bool   `yaml:"is_recovery_flow_enabled,omitempty" json:"isRecoveryFlowEnabled,omitempty" jsonschema:"Indicates if self-service recovery is enabled."`
 	ThemeID                   string `yaml:"theme_id,omitempty" json:"themeId,omitempty" jsonschema:"Associated theme configuration ID."`
 	LayoutID                  string `yaml:"layout_id,omitempty" json:"layoutId,omitempty" jsonschema:"Associated layout configuration ID."`
 	Template                  string `yaml:"template,omitempty" json:"template,omitempty" jsonschema:"Template used to create the application."`
@@ -104,6 +110,8 @@ type ApplicationProcessedDTO struct {
 	AuthFlowID                string `yaml:"auth_flow_id,omitempty"`
 	RegistrationFlowID        string `yaml:"registration_flow_id,omitempty"`
 	IsRegistrationFlowEnabled bool   `yaml:"is_registration_flow_enabled,omitempty"`
+	RecoveryFlowID            string `yaml:"recovery_flow_id,omitempty"`
+	IsRecoveryFlowEnabled     bool   `yaml:"is_recovery_flow_enabled,omitempty"`
 	ThemeID                   string `yaml:"theme_id,omitempty"`
 	LayoutID                  string `yaml:"layout_id,omitempty"`
 	Template                  string `yaml:"template,omitempty"`
@@ -149,6 +157,8 @@ type ApplicationRequest struct {
 	AuthFlowID                string                           `json:"authFlowId,omitempty" yaml:"auth_flow_id,omitempty"`
 	RegistrationFlowID        string                           `json:"registrationFlowId,omitempty" yaml:"registration_flow_id,omitempty"`
 	IsRegistrationFlowEnabled bool                             `json:"isRegistrationFlowEnabled" yaml:"is_registration_flow_enabled"`
+	RecoveryFlowID            string                           `json:"recoveryFlowId,omitempty" yaml:"recovery_flow_id,omitempty"`
+	IsRecoveryFlowEnabled     bool                             `json:"isRecoveryFlowEnabled" yaml:"is_recovery_flow_enabled"`
 	ThemeID                   string                           `json:"themeId,omitempty" yaml:"theme_id,omitempty"`
 	LayoutID                  string                           `json:"layoutId,omitempty" yaml:"layout_id,omitempty"`
 	Template                  string                           `json:"template,omitempty" yaml:"template,omitempty"`
@@ -176,6 +186,8 @@ type ApplicationRequestWithID struct {
 	AuthFlowID                string                        `json:"authFlowId,omitempty" yaml:"auth_flow_id,omitempty"`
 	RegistrationFlowID        string                        `json:"registrationFlowId,omitempty" yaml:"registration_flow_id,omitempty"`
 	IsRegistrationFlowEnabled bool                          `json:"isRegistrationFlowEnabled" yaml:"is_registration_flow_enabled"`
+	RecoveryFlowID            string                        `json:"recoveryFlowId,omitempty" yaml:"recovery_flow_id,omitempty"`
+	IsRecoveryFlowEnabled     bool                          `json:"isRecoveryFlowEnabled" yaml:"is_recovery_flow_enabled"`
 	ThemeID                   string                        `json:"themeId,omitempty" yaml:"theme_id,omitempty"`
 	LayoutID                  string                        `json:"layoutId,omitempty" yaml:"layout_id,omitempty"`
 	Template                  string                        `json:"template,omitempty" yaml:"template,omitempty"`
@@ -201,6 +213,8 @@ type ApplicationCompleteResponse struct {
 	AuthFlowID                string                           `json:"authFlowId,omitempty"`
 	RegistrationFlowID        string                           `json:"registrationFlowId,omitempty"`
 	IsRegistrationFlowEnabled bool                             `json:"isRegistrationFlowEnabled"`
+	RecoveryFlowID            string                           `json:"recoveryFlowId,omitempty"`
+	IsRecoveryFlowEnabled     bool                             `json:"isRecoveryFlowEnabled"`
 	ThemeID                   string                           `json:"themeId,omitempty"`
 	LayoutID                  string                           `json:"layoutId,omitempty"`
 	Template                  string                           `json:"template,omitempty"`
@@ -227,6 +241,8 @@ type ApplicationGetResponse struct {
 	AuthFlowID                string                           `json:"authFlowId,omitempty"`
 	RegistrationFlowID        string                           `json:"registrationFlowId,omitempty"`
 	IsRegistrationFlowEnabled bool                             `json:"isRegistrationFlowEnabled"`
+	RecoveryFlowID            string                           `json:"recoveryFlowId,omitempty"`
+	IsRecoveryFlowEnabled     bool                             `json:"isRecoveryFlowEnabled"`
 	ThemeID                   string                           `json:"themeId,omitempty"`
 	LayoutID                  string                           `json:"layoutId,omitempty"`
 	Template                  string                           `json:"template,omitempty"`
@@ -253,6 +269,8 @@ type BasicApplicationResponse struct {
 	AuthFlowID                string `json:"authFlowId,omitempty" jsonschema:"Authentication Flow ID."`
 	RegistrationFlowID        string `json:"registrationFlowId,omitempty" jsonschema:"Registration Flow ID."`
 	IsRegistrationFlowEnabled bool   `json:"isRegistrationFlowEnabled" jsonschema:"Registration enabled status."`
+	RecoveryFlowID            string `json:"recoveryFlowId,omitempty" jsonschema:"Recovery Flow ID."`
+	IsRecoveryFlowEnabled     bool   `json:"isRecoveryFlowEnabled" jsonschema:"Recovery enabled status."`
 	ThemeID                   string `json:"themeId,omitempty" jsonschema:"Theme ID."`
 	LayoutID                  string `json:"layoutId,omitempty" jsonschema:"Layout ID."`
 	Template                  string `json:"template,omitempty" jsonschema:"Application Template."`

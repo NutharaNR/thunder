@@ -131,6 +131,19 @@ var (
 			DefaultValue: "The provided registration flow ID is invalid",
 		},
 	}
+	// ErrorInvalidRecoveryFlowID is the error returned when an invalid recovery flow ID is provided.
+	ErrorInvalidRecoveryFlowID = serviceerror.ServiceError{
+		Type: serviceerror.ClientErrorType,
+		Code: "APP-1033",
+		Error: core.I18nMessage{
+			Key:          "error.applicationservice.invalid_recovery_flow_id",
+			DefaultValue: "Invalid recovery flow ID",
+		},
+		ErrorDescription: core.I18nMessage{
+			Key:          "error.applicationservice.invalid_recovery_flow_id_description",
+			DefaultValue: "The provided recovery flow ID is invalid",
+		},
+	}
 	// ErrorInvalidInboundAuthConfig is the error returned when invalid inbound auth config is provided.
 	ErrorInvalidInboundAuthConfig = serviceerror.ServiceError{
 		Type: serviceerror.ClientErrorType,
