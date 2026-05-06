@@ -1479,6 +1479,10 @@ const translations = {
     'edit.flows.registrationFlow.alert':
       'To modify the selected flow, <0>open the flow builder</0>. To create a new flow, visit the <1>Flows page</1>.',
     'edit.flows.enableRegistration.hint': 'Allow users to register new accounts through this application',
+    'edit.flows.labels.recoveryFlow': 'Recovery Flow',
+    'edit.flows.labels.recoveryFlow.description': 'Choose the flow that handles password and account recovery.',
+    'edit.flows.recoveryFlow.placeholder': 'Select a recovery flow',
+    'edit.flows.recoveryFlow.hint': 'Select the flow that handles account recovery for this application.',
     'edit.flows.editFlow': 'Edit flow',
 
     // Customization section

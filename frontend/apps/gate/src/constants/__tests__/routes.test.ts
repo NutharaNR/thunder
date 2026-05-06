@@ -61,6 +61,8 @@ describe('ROUTES', () => {
         SIGN_UP: '/signup',
         INVITE: '/invite',
         CALLBACK: '/callback',
+        FORGOT_PASSWORD: '/forgot-password',
+        RECOVERY: '/recovery',
       },
     };
     expect(routes.ROOT).toBe('/');

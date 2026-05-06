@@ -22,6 +22,8 @@ import ROUTES from '../constants/routes';
 import DefaultLayout from '../layouts/DefaultLayout';
 import AcceptInvitePage from '../pages/AcceptInvitePage';
 import ErrorPage from '../pages/ErrorPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import RecoveryPage from '../pages/RecoveryPage';
 import SignInPage from '../pages/SignInPage';
 import SignUpPage from '../pages/SignUpPage';
 
@@ -64,6 +66,8 @@ const appRoutes: AppRoute[] = [
       {path: ROUTES.AUTH.SIGN_IN, element: <SignInPage />},
       {path: ROUTES.AUTH.SIGN_UP, element: <SignUpPage />},
       {path: ROUTES.AUTH.INVITE, element: <AcceptInvitePage />},
+      {path: ROUTES.AUTH.FORGOT_PASSWORD, element: <ForgotPasswordPage />},
+      {path: ROUTES.AUTH.RECOVERY, element: <RecoveryPage />},
       {path: ROUTES.AUTH.CALLBACK, element: <CallbackRoute />},
       {path: ROUTES.AUTH.ERROR, element: <ErrorPage />},
     ],

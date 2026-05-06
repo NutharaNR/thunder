@@ -48,6 +48,14 @@ export interface Routes {
      * OAuth callback page route.
      */
     CALLBACK: string;
+    /**
+     * Forgot password page route.
+     */
+    FORGOT_PASSWORD: string;
+    /**
+     * Recovery page route (reached via email link).
+     */
+    RECOVERY: string;
   };
 }
 
@@ -73,6 +81,8 @@ const ROUTES: Routes = {
     SIGN_UP: '/signup',
     INVITE: '/invite',
     CALLBACK: '/callback',
+    FORGOT_PASSWORD: '/forgot-password',
+    RECOVERY: '/recovery',
   },
 } as const;
 
