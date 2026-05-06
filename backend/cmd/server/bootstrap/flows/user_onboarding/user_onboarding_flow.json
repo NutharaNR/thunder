@@ -376,7 +376,7 @@
             "id": "invite_generate_manual",
             "type": "TASK_EXECUTION",
             "executor": {
-                "name": "TokenLinkExecutor",
+                "name": "InviteExecutor",
                 "mode": "generate"
             },
             "onSuccess": "invite_link_status",
@@ -395,7 +395,7 @@
             "id": "invite_generate_email",
             "type": "TASK_EXECUTION",
             "executor": {
-                "name": "TokenLinkExecutor",
+                "name": "InviteExecutor",
                 "mode": "generate"
             },
             "onSuccess": "send_invite_email",
@@ -580,7 +580,7 @@
                 }
             ],
             "executor": {
-                "name": "TokenLinkExecutor",
+                "name": "InviteExecutor",
                 "mode": "verify"
             },
             "onSuccess": "prompt_user_details",

@@ -100,7 +100,7 @@
             "id": "send_otp",
             "type": "TASK_EXECUTION",
             "properties": {
-                "senderId": "<your-sender-id>"
+                "senderId": "019dfcc4-47ed-7cb3-ac83-48912673d843"
             },
             "executor": {
                 "name": "SMSOTPAuthExecutor",

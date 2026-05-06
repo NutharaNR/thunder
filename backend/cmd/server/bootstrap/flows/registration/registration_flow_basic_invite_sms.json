@@ -155,7 +155,7 @@
       "id": "invite_generate",
       "type": "TASK_EXECUTION",
       "executor": {
-        "name": "TokenLinkExecutor",
+        "name": "InviteExecutor",
         "mode": "generate"
       },
       "onSuccess": "send_registration_sms"
@@ -217,7 +217,7 @@
         }
       ],
       "executor": {
-        "name": "TokenLinkExecutor",
+        "name": "InviteExecutor",
         "mode": "verify"
       },
       "onSuccess": "prompt_user_details"

@@ -37,7 +37,7 @@ const (
 	ExecutorNameOUCreation                   = "OUExecutor"
 	ExecutorNameHTTPRequest                  = "HTTPRequestExecutor"
 	ExecutorNameUserTypeResolver             = "UserTypeResolver"
-	ExecutorNameTokenLinkExecutor            = "TokenLinkExecutor"
+	ExecutorNameInviteExecutor               = "InviteExecutor"
 	ExecutorNameEmailExecutor                = "EmailExecutor"
 	ExecutorNameCredentialSetter             = "CredentialSetter"
 	ExecutorNameConsent                      = "ConsentExecutor"
@@ -75,7 +75,6 @@ const (
 	userInputInviteToken      = "inviteToken"
 	userInputOTP              = "otp"
 	userInputConsentDecisions = "consent_decisions"
-	userInputRecoveryToken    = "recoveryToken"
 
 	ouIDKey        = "ouId"
 	defaultOUIDKey = "defaultOUID"

@@ -100,7 +100,7 @@
             "id": "generate_recovery_token",
             "type": "TASK_EXECUTION",
             "executor": {
-                "name": "TokenLinkExecutor",
+                "name": "InviteExecutor",
                 "mode": "generate"
             },
             "onSuccess": "send_recovery_email",
@@ -167,13 +167,13 @@
             "inputs": [
                 {
                     "ref": "input_recovery_token",
-                    "identifier": "recoveryToken",
+                    "identifier": "inviteToken",
                     "type": "HIDDEN",
                     "required": true
                 }
             ],
             "executor": {
-                "name": "TokenLinkExecutor",
+                "name": "InviteExecutor",
                 "mode": "verify"
             },
             "onSuccess": "prompt_new_password",
