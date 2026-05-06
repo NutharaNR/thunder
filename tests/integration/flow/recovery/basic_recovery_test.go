@@ -245,14 +245,14 @@ func (ts *BasicRecoveryFlowTestSuite) TestBasicRecoveryFlow_Success() {
 	recoveryLink := email.ExtractRecoveryLink()
 	ts.Require().NotEmpty(recoveryLink, "Expected recovery link in email body")
 
-	recoveryToken := testutils.ExtractQueryParam(recoveryLink, "recoveryToken")
-	ts.Require().NotEmpty(recoveryToken, "Expected recoveryToken query param in recovery link")
+	recoveryToken := testutils.ExtractQueryParam(recoveryLink, "inviteToken")
+	ts.Require().NotEmpty(recoveryToken, "Expected inviteToken query param in recovery link")
 
 	// Step 3: Submit recovery token — engine resumes at verify_recovery_token,
 	// verifies token, then stops at prompt_new_password.
 	flowStep, err = common.CompleteFlow(
 		flowStep.ExecutionID,
-		map[string]string{"recoveryToken": recoveryToken},
+		map[string]string{"inviteToken": recoveryToken},
 		"",
 		flowStep.ChallengeToken,
 	)
@@ -342,7 +342,7 @@ func (ts *BasicRecoveryFlowTestSuite) TestBasicRecoveryFlow_InvalidToken() {
 	// Submit a wrong recovery token.
 	flowStep, err = common.CompleteFlow(
 		flowStep.ExecutionID,
-		map[string]string{"recoveryToken": "invalid-token-abcdef"},
+		map[string]string{"inviteToken": "invalid-token-abcdef"},
 		"",
 		flowStep.ChallengeToken,
 	)

@@ -204,20 +204,20 @@ func extractSMTPAngle(s string) string {
 	return strings.TrimSpace(s)
 }
 
-// ExtractRecoveryLink searches the email body for a URL containing "recoveryToken"
+// ExtractRecoveryLink searches the email body for a URL containing "inviteToken"
 // and returns the first match. Returns "" if none is found.
 func (e *EmailMessage) ExtractRecoveryLink() string {
 	for _, word := range strings.Fields(e.Body) {
 		// Strip surrounding HTML punctuation that may appear in href="..." values
 		word = strings.Trim(word, `"'<>`)
-		if strings.HasPrefix(word, "http") && strings.Contains(word, "recoveryToken") {
+		if strings.HasPrefix(word, "http") && strings.Contains(word, "inviteToken") {
 			return word
 		}
 	}
 	// Fallback: scan character-by-character for href values
 	body := e.Body
 	for {
-		idx := strings.Index(body, "recoveryToken")
+		idx := strings.Index(body, "inviteToken")
 		if idx == -1 {
 			break
 		}
@@ -235,7 +235,7 @@ func (e *EmailMessage) ExtractRecoveryLink() string {
 		if strings.HasPrefix(candidate, "http") {
 			return candidate
 		}
-		body = body[idx+len("recoveryToken"):]
+		body = body[idx+len("inviteToken"):]
 	}
 	return ""
 }
