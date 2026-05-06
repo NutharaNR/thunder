@@ -136,4 +136,9 @@ export interface FlowComponentRendererProps {
    * but `application.sign_up_url` is absent from the meta object.
    */
   signUpFallbackUrl?: string;
+  /**
+   * Fallback forgot-password URL used when the flow meta contains a forgot-password URL template
+   * but `application.forgot_password_url` is absent from the meta object.
+   */
+  forgotPasswordFallbackUrl?: string;
 }

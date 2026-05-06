@@ -47,6 +47,8 @@ interface BlockContext {
   primarySubmitId?: string;
   /** Fallback sign-up URL for RICH_TEXT elements that embed `application.sign_up_url` */
   signUpFallbackUrl?: string;
+  /** Fallback forgot-password URL for RICH_TEXT elements that embed `application.forgot_password_url` */
+  forgotPasswordFallbackUrl?: string;
 }
 
 interface SubmitButtonAdapterProps {
@@ -210,6 +212,7 @@ function renderFormSubComponent(
         component={sub}
         resolve={ctx.resolve}
         signUpFallbackUrl={ctx.signUpFallbackUrl}
+        forgotPasswordFallbackUrl={ctx.forgotPasswordFallbackUrl}
       />
     );
   }

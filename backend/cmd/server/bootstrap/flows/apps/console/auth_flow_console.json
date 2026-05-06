@@ -52,6 +52,13 @@
                                 "label": "<p class=\"rich-text-paragraph\"><span class=\"rich-text-pre-wrap\">Don't have an account? </span><a href=\"{{meta(application.sign_up_url)}}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"rich-text-link\"><span class=\"rich-text-pre-wrap\">Sign up</span></a></p>",
                                 "resourceType": "ELEMENT",
                                 "type": "RICH_TEXT"
+                            },
+                            {
+                                "category": "DISPLAY",
+                                "id": "rich_text_forgot_password",
+                                "label": "<p class=\"rich-text-paragraph\"><span class=\"rich-text-pre-wrap\">Forgot password? </span><a href=\"{{meta(application.forgot_password_url)}}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"rich-text-link\"><span class=\"rich-text-pre-wrap\">Click here</span></a></p>",
+                                "resourceType": "ELEMENT",
+                                "type": "RICH_TEXT"
                             }
                         ]
                     }

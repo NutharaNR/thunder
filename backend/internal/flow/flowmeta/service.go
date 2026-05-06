@@ -177,6 +177,7 @@ func (fms *flowMetaService) populateTypeMetadata(
 	}
 
 	response.IsRegistrationFlowEnabled = app.IsRegistrationFlowEnabled
+	response.IsRecoveryFlowEnabled = app.IsRecoveryFlowEnabled
 	response.Application = &ApplicationMetadata{
 		ID:          app.ID,
 		Name:        app.Name,
